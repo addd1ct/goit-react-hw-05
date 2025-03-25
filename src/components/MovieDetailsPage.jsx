@@ -1,33 +1,44 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link, Routes, Route } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react';
+import { useParams, useNavigate, useLocation, Link, Outlet } from 'react-router-dom';
 import axios from 'axios';
-import MovieCast from '../components/MovieCast';
-import MovieReviews from '../components/MovieReviews';
 
-function MovieDetailsPage() {
+const MovieDetailsPage = () => {
   const { movieId } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const backLinkRef = useRef(location.state?.from || "/movies");
   const [movie, setMovie] = useState(null);
 
   useEffect(() => {
-    axios.get(`https://api.themoviedb.org/3/movie/${movieId}`, {
-      headers: { Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI1YzY5OGY1YTA2YTEzMGI0N2JjOGFkOGExYTZmNGM3ZiIsIm5iZiI6MTc0MjY1NzAyMy4zODgsInN1YiI6IjY3ZGVkNWZmYzcwYWNkZDlkZjY5ZDExNiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.-gWVEtrqVuCWlHBdz6V1LgNNlOh3N2PYZuSGLIQe4KI' }
-    }).then(response => setMovie(response.data));
+    const fetchMovieDetails = async () => {
+      try {
+        const response = await axios.get(`https://api.themoviedb.org/3/movie/${movieId}`, {
+          headers: { Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI1YzY5OGY1YTA2YTEzMGI0N2JjOGFkOGExYTZmNGM3ZiIsIm5iZiI6MTc0MjY1NzAyMy4zODgsInN1YiI6IjY3ZGVkNWZmYzcwYWNkZDlkZjY5ZDExNiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.-gWVEtrqVuCWlHBdz6V1LgNNlOh3N2PYZuSGLIQe4KI' }
+        });
+        setMovie(response.data);
+      } catch (error) {
+        console.error('Error fetching movie details:', error);
+      }
+    };
+    fetchMovieDetails();
   }, [movieId]);
 
-  if (!movie) return <div>Loading...</div>;
+  if (!movie) return <p>Loading...</p>;
 
   return (
     <div>
+      <Link to={backLinkRef.current}>Go back</Link>
       <h1>{movie.title}</h1>
       <p>{movie.overview}</p>
-      <Link to="cast">Cast</Link>
-      <Link to="reviews">Reviews</Link>
-      <Routes>
-        <Route path="cast" element={<MovieCast />} />
-        <Route path="reviews" element={<MovieReviews />} />
-      </Routes>
+      <nav>
+        <Link to="cast">Cast</Link>
+        <Link to="reviews">Reviews</Link>
+      </nav>
+      <Outlet />
     </div>
   );
-}
+};
 
 export default MovieDetailsPage;
+
+
